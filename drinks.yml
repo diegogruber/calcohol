@@ -1,0 +1,11 @@
+pfand: 2.00
+drinks:
+  - name: "🍻 Bier"
+    price: 2.5
+    pfand: true
+  - name: "🥤 Cola"
+    price: 2.0
+    pfand: true
+  - name: "🥛 Wasser"
+    price: 1.5
+    pfand: false

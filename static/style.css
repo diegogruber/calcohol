@@ -1,0 +1,121 @@
+.container {
+    max-width: 600px;
+    margin: auto;
+    font-family: sans-serif;
+}
+
+.drink-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 6px 0;
+}
+
+.drink-row span,
+.drink-row button {
+  font-size: 1.2rem;
+}
+
+.drink-row button {
+  padding: 0.4rem 0.6rem;
+}
+
+.total {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+.admin-view textarea {
+    width: 100%;
+}
+
+.card-container {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+}
+
+.card-inner {
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+}
+
+.card-front {
+  z-index: 2;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.controls .count-display {
+  border: none;
+  background: transparent;
+  padding: 1rem;
+  font-size: 2rem;
+}
+
+.controls span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;            /* match button height */
+  min-width: 2.5rem;       /* so the number doesn't shrink too small */
+  border: 1px solid #ccc;  /* optional: to give it a "button-like" look */
+  border-radius: 4px;
+  font-weight: bold;
+  background-color: #f9f9f9;
+}
+
+.total-box {
+  background-color: #f0f9ff;
+  border: 2px solid #007acc;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #003e66;
+  text-align: center;
+  margin: 1rem auto;
+  max-width: 400px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.subtotal {
+  margin-left: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #003e66;
+  background-color: #eef7ff;
+  border: 1px solid #c2e0f4;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  width: 6rem;
+  text-align: right;
+  flex-shrink: 0;         /* prevent it from shrinking */
+  display: inline-flex;   /* ensure sizing works inside flexbox */
+  justify-content: flex-end;
+}
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.button-row button {
+  width: auto;
+}
