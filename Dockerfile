@@ -1,16 +1,12 @@
 FROM python:3.12-slim
 
-# System deps (optional but helpful for common libs)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+RUN apt-get update && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-RUN pip install uv
+# Install uv and dependencies
+RUN pip install uv fasthtml pyyaml
 
 WORKDIR /app
-
-# Copy everything
 COPY . .
 
 # Install dependencies using uv
@@ -18,6 +14,5 @@ RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
 
-# Run your app exactly like you do locally,
-# but using $PORT for Railway compatibility.
-CMD ["sh", "-c", "uv run main.py"]
+# Run the app (main.py already handles PORT and host)
+CMD ["uv", "run", "main.py"]
