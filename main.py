@@ -32,6 +32,7 @@ def total():
     base = sum(d.count * (d.price + (pfand_value if d.pfand else 0)) for d in drinks)
     return round(base - (pfand_returns * pfand_value), 2)
 
+
 # --- UI ---
 def wrap_card():
     return Div(
