@@ -20,4 +20,4 @@ EXPOSE 8000
 
 # Run your app exactly like you do locally,
 # but using $PORT for Railway compatibility.
-CMD ["sh", "-c", "uv run main.py --port $PORT"]
+CMD ["sh", "-c", "uv run main.py"]
