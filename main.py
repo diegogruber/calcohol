@@ -1,6 +1,7 @@
 from fasthtml.common import *
 from typing import List
 import yaml
+import os
 
 app, rt = fast_app(debug=True)
 
@@ -172,4 +173,6 @@ def reset():
 
 
 # --- Run App ---
-serve()
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    serve(host="0.0.0.0", port=port)
