@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv and dependencies
-RUN pip install uv fasthtml pyyaml
+RUN pip install uv python-fasthtml pyyaml
 
 WORKDIR /app
 COPY . .
