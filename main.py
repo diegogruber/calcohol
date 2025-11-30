@@ -20,10 +20,12 @@ drinks: List[Drink] = [Drink(**entry) for entry in config["drinks"]]
 
 # --- Session helpers (per-device state) ---
 SESSION_KEY = "calc_state"
+ADMIN_PIN = "1234"
 
 
 def default_state() -> Dict[str, Any]:
-    return {"counts": [0] * len(drinks), "pfand_returns": 0, "flipped": False}
+    return {"counts": [0] * len(drinks), "pfand_returns": 0, "flipped": False, 
+        "is_admin": False,}
 
 
 def get_calc_state(request) -> Dict[str, Any]:
@@ -48,6 +50,9 @@ def get_calc_state(request) -> Dict[str, Any]:
     # Ensure flipped exists and is bool
     flipped: bool = bool(state.get("flipped", False))
     state["flipped"] = flipped
+
+    # Ensure is_admin exists and is bool
+    state["is_admin"] = bool(state.get("is_admin", False))
 
     return state
 
@@ -74,19 +79,46 @@ def compute_total_from_state(state: Dict[str, Any]) -> float:
 def wrap_card(state: Dict[str, Any]):
     return Div(
         Link(rel="stylesheet", href="/static/style.css"),
+
+        # CARD UI
         Div(
             Div(calc_content(state), cls="card-front"),
             Div(admin_content(), cls="card-back"),
-            cls=f"card-inner {'flipped' if state['flipped'] else ''}",
+            cls=f"card-inner {'flipped' if state.get('flipped') else ''}",
         ),
+
+        # POPUP HOLDER – dialog loads here
+        Div(id="pin-dialog"),
+
         cls="card-container",
     )
 
 
 def calc_content(state: Dict[str, Any]):
     counts = state["counts"]
+
+    # --- Total box becomes PIN entry if needed ---
+    if state.get("awaiting_pin", False):
+        total_box = Div(
+            Form(
+                Input(type="password", name="pin", placeholder="Admin PIN", cls="pin-input"),
+                Button("✔️", type="submit"),
+                cls="pin-form",
+                hx_post="/enter_pin",
+                hx_target="body",
+            ),
+            Div(state.get("pin_error", ""), cls="pin-error") if state.get("pin_error") else "",
+            cls="total-box pin-mode",
+        )
+    else:
+        total_box = Div(
+            f"💰 Gesamt: € {compute_total_from_state(state):.2f}",
+            cls="total-box"
+        )
+
     return Div(
-        Div(f"💰 Gesamt: € {compute_total_from_state(state):.2f}", cls="total-box"),
+        total_box,
+
         *[
             Div(
                 Span(f"{d.name} (€ {d.price:.2f}{' + Pfand' if d.pfand else ''})"),
@@ -104,7 +136,9 @@ def calc_content(state: Dict[str, Any]):
             )
             for i, d in enumerate(drinks)
         ],
+
         Hr(),
+
         Div(
             Span("♻️ Pfand Rückgabe:"),
             Div(
@@ -116,12 +150,15 @@ def calc_content(state: Dict[str, Any]):
             ),
             cls="drink-row",
         ),
+
         Hr(),
+
         Div(
-            Button("🔁 Zurücksetzen", hx_post="/reset", hx_target="body"),
-            Button("🔄 Verwaltung", hx_get="/flip", hx_target="body"),
+            Button("🔁 Reset", hx_post="/reset", hx_target="body"),
+            Button("🔑 Admin", hx_post="/request_pin", hx_target="body"),
             cls="button-row",
         ),
+
         cls="container",
     )
 
@@ -151,6 +188,23 @@ def admin_content():
         ),
     )
 
+def pin_dialog(error: str | None = None):
+    return Dialog(
+        Form(
+            H3("🔐 Admin PIN"),
+            (Div(error, cls="pin-error") if error else ""),
+            Input(type="password", name="pin", placeholder="PIN eingeben", cls="pin-input"),
+            Div(
+                Button("Abbrechen", type="button", hx_get="/close_pin", hx_target="#pin-dialog"),
+                Button("OK", type="submit"),
+                cls="button-row",
+            ),
+            hx_post="/check_pin",
+            hx_target="#pin-dialog",
+        ),
+        id="pin-dialog",
+        open=True   # THIS makes the dialog show
+    )
 
 # --- Routes (use session—per device) ---
 @rt("/")
@@ -162,8 +216,15 @@ def calculator(request):
 @rt("/flip")
 def flip(request):
     state = get_calc_state(request)
-    flip_state = state.get("flipped", False)
-    state["flipped"] = not flip_state
+
+    # If not in admin mode → require PIN
+    if not state.get("flipped", False):
+        state["entering_pin"] = True
+        save_calc_state(request, state)
+        return wrap_card(state)
+
+    # Already admin → flip back
+    state["flipped"] = False
     save_calc_state(request, state)
     return wrap_card(state)
 
@@ -214,6 +275,26 @@ def upload_drinks(request, yaml_text: str):
 @rt("/reset", methods=["POST"])
 def reset(request):
     state = default_state()
+    save_calc_state(request, state)
+    return wrap_card(state)
+
+@rt("/request_pin", methods=["POST"])
+def request_pin(request):
+    state = get_calc_state(request)
+    state["awaiting_pin"] = True
+    state["pin_error"] = ""
+    save_calc_state(request, state)
+    return wrap_card(state)
+
+@rt("/enter_pin", methods=["POST"])
+def enter_pin(request, pin: str):
+    state = get_calc_state(request)
+    if pin == ADMIN_PIN:
+        state["awaiting_pin"] = False
+        state["pin_error"] = ""
+        state["flipped"] = True
+    else:
+        state["pin_error"] = "❌ Falscher PIN"
     save_calc_state(request, state)
     return wrap_card(state)
 
