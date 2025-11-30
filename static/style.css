@@ -19,6 +19,7 @@
 
 .drink-row button {
   padding: 0.4rem 0.6rem;
+  touch-action: manipulation;
 }
 
 .total {
