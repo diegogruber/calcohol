@@ -1,12 +1,15 @@
+
+
 .container {
     max-width: 600px;
     margin: auto;
     font-family: sans-serif;
 }
 
+/* General row layout */
 .drink-row {
   display: flex;
-  align-items: center;
+  align-items: center;        /* vertical centering */
   justify-content: space-between;
   gap: 0.5rem;
   margin: 6px 0;
@@ -62,11 +65,54 @@
   transform: rotateY(180deg);
 }
 
+/* Controls container: buttons, count, subtotal */
+.controls {
+  display: flex;
+  align-items: center;        /* vertical centering */
+  gap: 0.5rem;
+}
+
+/* Buttons */
+.controls button {
+  height: 2.8rem;             /* uniform height */
+  min-width: 2.8rem;
+  padding: 0 0.6rem;
+  font-size: 1.3rem;
+  line-height: 1;
+  border-radius: 6px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  touch-action: manipulation; /* prevent mobile double-tap zoom */
+}
+
+/* Count display between buttons */
 .controls .count-display {
-  border: none;
-  background: transparent;
-  padding: 1rem;
-  font-size: 2rem;
+  display: flex;
+  align-items: center;        /* vertical centering */
+  justify-content: center;    /* horizontal centering */
+  height: 2.8rem;             /* same as buttons */
+  min-width: 2.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-weight: bold;
+  background-color: #f9f9f9;
+}
+
+/* Subtotal at the end */
+.controls .subtotal {
+  display: flex;
+  align-items: center;        /* vertical centering */
+  justify-content: flex-end;
+  height: 2.8rem;             /* match button height */
+  min-width: 6rem;
+  padding: 0 0.5rem;
+  font-weight: bold;
+  color: #003e66;
+  background-color: #eef7ff;
+  border: 1px solid #c2e0f4;
+  border-radius: 6px;
+  flex-shrink: 0;             /* prevent shrinking */
 }
 
 .controls span {
@@ -93,22 +139,6 @@
   margin: 1rem auto;
   max-width: 400px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-}
-
-.subtotal {
-  margin-left: 1rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #003e66;
-  background-color: #eef7ff;
-  border: 1px solid #c2e0f4;
-  border-radius: 6px;
-  padding: 0.3rem 0.6rem;
-  width: 6rem;
-  text-align: right;
-  flex-shrink: 0;         /* prevent it from shrinking */
-  display: inline-flex;   /* ensure sizing works inside flexbox */
-  justify-content: flex-end;
 }
 
 .button-row {
