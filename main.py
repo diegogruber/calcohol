@@ -18,15 +18,12 @@ with open("drinks.yml", "r", encoding="utf-8") as f:
 pfand_value: float = config["pfand"]
 drinks: List[Drink] = [Drink(**entry) for entry in config["drinks"]]
 
-# TODO: UI flip is global, move into session
-flip_state = {"flipped": False}
-
 # --- Session helpers (per-device state) ---
 SESSION_KEY = "calc_state"
 
 
 def default_state() -> Dict[str, Any]:
-    return {"counts": [0] * len(drinks), "pfand_returns": 0}
+    return {"counts": [0] * len(drinks), "pfand_returns": 0, "flipped": False}
 
 
 def get_calc_state(request) -> Dict[str, Any]:
@@ -34,17 +31,25 @@ def get_calc_state(request) -> Dict[str, Any]:
     Read the per-device state from the session. If missing or malformed,
     return a default state. Also keep counts length in sync with drinks.
     """
-    s = request.session.get(SESSION_KEY)
-    if not isinstance(s, dict):
-        s = default_state()
-    # Ensure counts length matches drinks
-    counts = s.get("counts", [])
+    state: Dict[str, Any] = request.session.get(SESSION_KEY)
+
+    if not isinstance(state, dict):
+        state = default_state()
+
+    # Ensure counts is correct length
+    counts: List[int] = state.get("counts", [])
     if len(counts) != len(drinks):
-        counts = counts[: len(drinks)] + [0] * max(0, len(drinks) - len(counts))
-    s["counts"] = counts
+        counts = counts[:len(drinks)] + [0] * max(0, len(drinks) - len(counts))
+    state["counts"] = counts
+
     # Ensure pfand_returns exists and is int
-    s["pfand_returns"] = int(s.get("pfand_returns", 0))
-    return s
+    state["pfand_returns"] = int(state.get("pfand_returns", 0))
+
+    # Ensure flipped exists and is bool
+    flipped: bool = bool(state.get("flipped", False))
+    state["flipped"] = flipped
+
+    return state
 
 
 def save_calc_state(request, state: Dict[str, Any]) -> None:
@@ -72,7 +77,7 @@ def wrap_card(state: Dict[str, Any]):
         Div(
             Div(calc_content(state), cls="card-front"),
             Div(admin_content(), cls="card-back"),
-            cls=f"card-inner {'flipped' if flip_state['flipped'] else ''}",
+            cls=f"card-inner {'flipped' if state['flipped'] else ''}",
         ),
         cls="card-container",
     )
@@ -156,8 +161,10 @@ def calculator(request):
 
 @rt("/flip")
 def flip(request):
-    flip_state["flipped"] = not flip_state["flipped"]
     state = get_calc_state(request)
+    flip_state = state.get("flipped", False)
+    state["flipped"] = not flip_state
+    save_calc_state(request, state)
     return wrap_card(state)
 
 
