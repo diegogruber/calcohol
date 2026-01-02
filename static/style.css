@@ -25,6 +25,17 @@
   touch-action: manipulation;
 }
 
+.drink-name {
+    font-weight: 600;
+    display: block;
+}
+
+.drink-price {
+    font-size: 0.85em;
+    font-style: italic;
+    color: #777;
+}
+
 .total {
     text-align: center;
     font-size: 1.5rem;

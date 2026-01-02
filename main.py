@@ -7,7 +7,7 @@ app, rt = fast_app(debug=True)
 
 # --- Global (shared) state: drinks/prices are global and loaded from YAML ---
 class Drink:
-    def __init__(self, name: str, price: float, pfand: bool):
+    def __init__(self, name: str, price: float, pfand: float = 0.0):
         self.name = name
         self.price = price
         self.pfand = pfand
@@ -15,8 +15,27 @@ class Drink:
 with open("drinks.yml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
-pfand_value: float = config["pfand"]
-drinks: List[Drink] = [Drink(**entry) for entry in config["drinks"]]
+pfand_default: float = float(
+    config.get("pfand_default", config.get("pfand", 0.0))
+)
+
+drinks: List[Drink] = []
+for entry in config["drinks"]:
+    pf = entry.get("pfand", None)
+
+    # backward compatibility
+    if isinstance(pf, bool):
+        pf = pfand_default if pf else 0.0
+    elif pf is None:
+        pf = pfand_default
+
+    drinks.append(
+        Drink(
+            name=entry["name"],
+            price=float(entry["price"]),
+            pfand=float(pf),
+        )
+    )
 
 # --- Session helpers (per-device state) ---
 SESSION_KEY = "calc_state"
@@ -24,8 +43,12 @@ ADMIN_PIN = "1234"
 
 
 def default_state() -> Dict[str, Any]:
-    return {"counts": [0] * len(drinks), "pfand_returns": 0, "flipped": False, 
-        "is_admin": False,}
+    return {
+        "counts": [0] * len(drinks),
+        "pfand_returns": {},  # {0.25: 2, 0.50: 1}
+        "flipped": False,
+        "is_admin": False,
+    }
 
 
 def get_calc_state(request) -> Dict[str, Any]:
@@ -45,7 +68,16 @@ def get_calc_state(request) -> Dict[str, Any]:
     state["counts"] = counts
 
     # Ensure pfand_returns exists and is int
-    state["pfand_returns"] = int(state.get("pfand_returns", 0))
+    pfand_returns = state.get("pfand_returns", {})
+    if not isinstance(pfand_returns, dict):
+        pfand_returns = {}
+
+    # Ensure numeric keys
+    state["pfand_returns"] = {
+        float(k): int(v)
+        for k, v in pfand_returns.items()
+        if float(k) > 0
+    }
 
     # Ensure flipped exists and is bool
     flipped: bool = bool(state.get("flipped", False))
@@ -66,13 +98,17 @@ def save_calc_state(request, state: Dict[str, Any]) -> None:
 
 # --- Calculation helpers ---
 def compute_total_from_state(state: Dict[str, Any]) -> float:
-    counts = state["counts"]
-    base = 0.0
+    total = 0.0
+
+    # Add drinks (price + pfand)
     for i, d in enumerate(drinks):
-        cnt = counts[i] if i < len(counts) else 0
-        base += cnt * (d.price + (pfand_value if d.pfand else 0))
-    total = round(base - (state["pfand_returns"] * pfand_value), 2)
-    return total
+        total += state["counts"][i] * (d.price + d.pfand)
+
+    # Subtract returned pfand (by pfand level)
+    for pfand_value, returned in state["pfand_returns"].items():
+        total -= returned * pfand_value
+
+    return round(total, 2)
 
 
 # --- UI builders (stateless: built from drinks + session state) ---
@@ -121,13 +157,20 @@ def calc_content(state: Dict[str, Any]):
 
         *[
             Div(
-                Span(f"{d.name} (€ {d.price:.2f}{' + Pfand' if d.pfand else ''})"),
+                Div(
+                    Div(d.name, cls="drink-name"),
+                    Div(
+                        f"€ {d.price:.2f}"
+                        + (f" + € {d.pfand:.2f}" if d.pfand > 0 else ""),
+                        cls="drink-price",
+                    ),
+                ),
                 Div(
                     Button("➖", hx_post=f"/change/{i}/-1", hx_target="body"),
                     Span(str(counts[i]), cls="count-display"),
                     Button("➕", hx_post=f"/change/{i}/1", hx_target="body"),
                     Span(
-                        f"€ {counts[i] * (d.price + (pfand_value if d.pfand else 0)):.2f}",
+                        f"€ {counts[i] * (d.price + (pfand_default if d.pfand else 0)):.2f}",
                         cls="subtotal",
                     ),
                     cls="controls",
@@ -139,17 +182,7 @@ def calc_content(state: Dict[str, Any]):
 
         Hr(),
 
-        Div(
-            Span("♻️ Pfand Rückgabe:"),
-            Div(
-                Button("➖", hx_post="/return_pfand/-1", hx_target="body"),
-                Span(f"{state['pfand_returns']}", cls="count-display"),
-                Button("➕", hx_post="/return_pfand/1", hx_target="body"),
-                Span(f"€ {state['pfand_returns'] * pfand_value:.2f}", cls="subtotal"),
-                cls="controls",
-            ),
-            cls="drink-row",
-        ),
+        pfand_return_section(state),
 
         Hr(),
 
@@ -162,10 +195,40 @@ def calc_content(state: Dict[str, Any]):
         cls="container",
     )
 
+def pfand_return_section(state):
+    pfand_levels = sorted({d.pfand for d in drinks if d.pfand > 0})
+
+    if not pfand_levels:
+        return ""
+
+    return Div(
+        H4("♻️ Pfand Rückgabe"),
+        *[
+            Div(
+                Span(f"€ {pfand:.2f}"),
+                Div(
+                    Button("➖", hx_post=f"/return_pfand/{pfand}/-1", hx_target="body"),
+                    Span(
+                        str(state["pfand_returns"].get(pfand, 0)),
+                        cls="count-display",
+                    ),
+                    Button("➕", hx_post=f"/return_pfand/{pfand}/1", hx_target="body"),
+                    Span(
+                        f"€ {state['pfand_returns'].get(pfand, 0) * pfand:.2f}",
+                        cls="subtotal",
+                    ),
+                    cls="controls",
+                ),
+                cls="drink-row",
+            )
+            for pfand in pfand_levels
+        ],
+    )
+
 
 def admin_content():
     drink_data = {
-        "pfand": round(pfand_value, 2),
+        "pfand": round(pfand_default, 2),
         "drinks": [{"name": d.name, "price": d.price, "pfand": d.pfand} for d in drinks],
     }
     return Div(
@@ -240,11 +303,15 @@ def change(request, idx: int, delta: int):
     return wrap_card(state)
 
 
-@rt("/return_pfand/{delta}", methods=["POST"])
-def return_pfand(request, delta: int):
+@rt("/return_pfand/{pfand}/{delta}", methods=["POST"])
+def return_pfand(request, pfand: float, delta: int):
     state = get_calc_state(request)
+    pfand = float(pfand)
     delta = int(delta)
-    state["pfand_returns"] = max(0, state["pfand_returns"] + delta)
+
+    current = state["pfand_returns"].get(pfand, 0)
+    state["pfand_returns"][pfand] = max(0, current + delta)
+
     save_calc_state(request, state)
     return wrap_card(state)
 
@@ -255,10 +322,10 @@ def upload_drinks(request, yaml_text: str):
     Admin uploads new YAML. This updates global drinks/prices.
     Note: existing sessions keep their counts — you may want to reset sessions separately.
     """
-    global drinks, pfand_value
+    global drinks, pfand_default
     try:
         data = yaml.safe_load(yaml_text)
-        pfand_value = float(data.get("pfand"))
+        pfand_default = float(data.get("pfand"))
         drinks = [
             Drink(d["name"], float(d["price"]), bool(d.get("pfand", False)))
             for d in data.get("drinks", [])

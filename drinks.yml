@@ -1,11 +1,22 @@
-pfand: 2.00
+pfand_default: 4.00
 drinks:
+  - name: "🍷 Glühwein / Doppelfehler"
+    price: 5.5
+  - name: "Punsch mit Schuss"
+    price: 4.5
+    pfand: 1.00
+  - name: "Punsch alkoholfrei"
+    price: 3.5
+  # Apperol Spritz
+  - name: "🍹 Apperol Spritz"
+    price: 6.0
+  # Bier, Cola, Wasser
   - name: "🍻 Bier"
-    price: 2.5
-    pfand: true
+    price: 3.5
+    pfand: 1.00
   - name: "🥤 Cola"
-    price: 2.0
-    pfand: true
+    price: 3.0
+    pfand: 1.00
   - name: "🥛 Wasser"
     price: 1.5
     pfand: false
