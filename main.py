@@ -148,6 +148,7 @@ def calc_content(state: Dict[str, Any]):
         )
     else:
         total_box = Div(
+            Button("🔄", hx_post="/reset", hx_target="body", cls="reset-icon"),
             f"💰 Gesamt: € {compute_total_from_state(state):.2f}",
             cls="total-box"
         )
@@ -188,8 +189,7 @@ def calc_content(state: Dict[str, Any]):
         Hr(),
 
         Div(
-            Button("🔁 Reset", hx_post="/reset", hx_target="body"),
-            Button("🔑 Admin", hx_post="/request_pin", hx_target="body"),
+            Button("Admin", hx_post="/request_pin", hx_target="body", cls="admin-link"),
             cls="button-row",
         ),
 

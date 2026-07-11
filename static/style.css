@@ -163,13 +163,39 @@
   color: #003e66;
   text-align: center;
   margin: 1rem 0;
+  position: relative;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.reset-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .button-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 1.5rem;
+}
+
+.admin-link {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+  color: #999;
+  cursor: pointer;
+  text-decoration: underline;
+  touch-action: manipulation;
 }
 
 .button-row button {
@@ -215,15 +241,13 @@
 
   .button-row {
     display: flex;
-    flex-wrap: wrap; 
-    gap: 0.7rem;
+    justify-content: flex-end;
     margin-top: 1rem;
   }
 
-  .button-row button {
-    flex: 1 1 48%;
-    font-size: 1.1rem;
-    padding: 0.7rem;
+  .admin-link {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
   }
 
   .admin-view textarea {

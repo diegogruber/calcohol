@@ -6,10 +6,10 @@ drinks:
   - name: "🍷 Wein / Spritzer"
     price: 4.00
     pfand: 2.00
-  - name: "🍸 Bacardi Cola klein"
+  - name: "🍸 Bacardi Cola Klein"
     price: 4.00
     pfand: 2.00
-  - name: "🍸🍸 Bacardi Cola groß"
+  - name: "🍸🍸 Bacardi Cola Groß"
     price: 6.00
     pfand: 2.00
   - name: "🥃 Shots"
