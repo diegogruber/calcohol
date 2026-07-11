@@ -203,15 +203,21 @@ def pfand_return_section(state):
         return ""
 
     return Div(
-        H4("♻️ Pfand Rückgabe"),
         *[
             Div(
-                Span(f"€ {pfand:.2f}"),
+                Div(
+                    Div(f"♻️ Pfand Rückgabe € {pfand:.2f}", cls="drink-name"),
+                    Div(
+                        f"€ {pfand:.2f}",
+                        cls="drink-price",
+                    ),
+                    cls="drink-info",
+                ),
                 Div(
                     Button("➖", hx_post=f"/return_pfand/{pfand}/-1", hx_target="body"),
                     Span(
-                        str(state["pfand_returns"].get(pfand, 0)),
-                        cls="count-display",
+                    str(state["pfand_returns"].get(pfand, 0)),
+                    cls="count-display pfand-count",
                     ),
                     Button("➕", hx_post=f"/return_pfand/{pfand}/1", hx_target="body"),
                     Span(

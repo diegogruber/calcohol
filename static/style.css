@@ -121,6 +121,10 @@
   color: #fff;
 }
 
+.controls .pfand-count {
+  background-color: #2e9e3f;
+}
+
 /* Subtotal at the end */
 .controls .subtotal {
   display: flex;
