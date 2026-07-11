@@ -25,15 +25,25 @@
   touch-action: manipulation;
 }
 
+.drink-info {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex: 1;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
 .drink-name {
     font-weight: 600;
-    display: block;
 }
 
 .drink-price {
     font-size: 0.85em;
     font-style: italic;
     color: #777;
+    text-align: right;
+    white-space: nowrap;
 }
 
 .total {
@@ -163,7 +173,7 @@
 }
 
 /* Responsive styles for mobile */
-@media (max-width: 600px) {
+/* Mobile-first: applied at all widths so the desktop preview matches mobile */
   .container,
   .card-container {
     max-width: 100vw;
@@ -216,4 +226,3 @@
     font-size: 1rem;
     min-height: 200px;
   }
-}

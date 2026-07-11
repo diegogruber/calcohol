@@ -164,6 +164,7 @@ def calc_content(state: Dict[str, Any]):
                         + (f" + € {d.pfand:.2f}" if d.pfand > 0 else ""),
                         cls="drink-price",
                     ),
+                    cls="drink-info",
                 ),
                 Div(
                     Button("➖", hx_post=f"/change/{i}/-1", hx_target="body"),
